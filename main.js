@@ -18,8 +18,8 @@ app.get('/', function(request, response) {
   });
 });
 
-app.get('/page', function(req, res) {
-  return res.send('/page');
+app.get('/page/:pageId', function(reqest, response) { // url = page/HTML      pageId = HTML
+  response.send(reqest.params);
 })
 
 // app.listen(3000, () => console.log('Example app listening on port 3000!'))
