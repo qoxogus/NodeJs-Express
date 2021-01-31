@@ -6,8 +6,10 @@ var qs = require('querystring');
 var bodyParser = require('body-parser');
 var path = require('path');
 var sanitizeHtml = require('sanitize-html');
+var compression = require('compression');
 
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(compression()); //압축
 
 //route, routing
 // app.get('/', (req, res) => res.send('Hello World!'))
