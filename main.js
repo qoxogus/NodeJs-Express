@@ -10,66 +10,67 @@ var compression = require('compression');
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(compression()); //압축
+app.get('*', function(request, response, next){ //next에 middleware가 담겨있다고 생각    불필요한 불러오기를 방지하기 위해 get을 사용(post방식 등에서 방지)   '*' = 들어오는 모든 요청    (들어오는 모든요청이 아닌 get방식으로 들어오는 요청에 대해서만 파일리스트를 가져오는 코드)
+  fs.readdir('./data', function(error, filelist) {
+    request.list = filelist;
+    next();
+  });
+});
 
 //route, routing
 // app.get('/', (req, res) => res.send('Hello World!'))
 app.get('/', function(request, response) {
-  fs.readdir('./data', function(error, filelist) {
-    var title = 'Welcome';
-    var description = 'Hello, Node.js';
-    var list = template.list(filelist);
-    var html = template.HTML(title, list,
-      `<h2>${title}</h2>${description}`, //template.HTML - control
-      `<a href="/create">create</a>` //template.HTML - body
-      );
-      response.send(html);
-  });
+  var title = 'Welcome';
+  var description = 'Hello, Node.js';
+  var list = template.list(request.list);
+  var html = template.HTML(title, list,
+    `<h2>${title}</h2>${description}`, //template.HTML - control
+    `<a href="/create">create</a>` //template.HTML - body
+    );
+  response.send(html);
 });
 
 app.get('/page/:pageId', function(request, response) { // url = page/HTML      pageId = HTML
-  fs.readdir('./data', function(error, filelist){
-    var filteredId = path.parse(request.params.pageId).base;
-    fs.readFile(`data/${filteredId}`, 'utf8', function(err, description){
-      var title = request.params.pageId;
-      var sanitizedTitle = sanitizeHtml(title);
-      var sanitizedDescription = sanitizeHtml(description, {
-        allowedTags:['h1']
-      });
-      var list = template.list(filelist);
-      var html = template.HTML(sanitizedTitle, list,
-        `<h2>${sanitizedTitle}</h2>${sanitizedDescription}`,
-        ` <a href="/create">create</a>
-          <a href="/update/${sanitizedTitle}">update</a>
-          <form action="/delete_process" method="post">
-            <input type="hidden" name="id" value="${sanitizedTitle}">
-            <input type="submit" value="delete">
-          </form>`
-      );
-      response.send(html);
+  var filteredId = path.parse(request.params.pageId).base;
+  fs.readFile(`data/${filteredId}`, 'utf8', function(err, description){
+    var title = request.params.pageId;
+    var sanitizedTitle = sanitizeHtml(title);
+    var sanitizedDescription = sanitizeHtml(description, {
+      allowedTags:['h1']
     });
-  });
-})
-
-app.get('/create', function(reqest, response){
-  fs.readdir('./data', function(error, filelist){
-    var title = 'WEB - create';
-    var list = template.list(filelist);
-    var html = template.HTML(title, list, `
-      <form action="/create_process" method="post">
-        <p><input type="text" name="title" placeholder="title"></p>
-        <p>
-          <textarea name="description" placeholder="description"></textarea>
-        </p>
-        <p>
-          <input type="submit">
-        </p>
-      </form>
-    `, '');
+    var list = template.list(request.list);
+    var html = template.HTML(sanitizedTitle, list,
+      `<h2>${sanitizedTitle}</h2>${sanitizedDescription}`,
+      ` <a href="/create">create</a>
+        <a href="/update/${sanitizedTitle}">update</a>
+        <form action="/delete_process" method="post">
+          <input type="hidden" name="id" value="${sanitizedTitle}">
+          <input type="submit" value="delete">
+        </form>`
+    );
     response.send(html);
   });
 });
 
+app.get('/create', function(request, response){
+  var title = 'WEB - create';
+  var list = template.list(request.list);
+  var html = template.HTML(title, list, `
+    <form action="/create_process" method="post">
+      <p><input type="text" name="title" placeholder="title"></p>
+      <p>
+        <textarea name="description" placeholder="description"></textarea>
+      </p>
+      <p>
+        <input type="submit">
+      </p>
+    </form>
+  `, '');
+  response.send(html);
+});
+
 app.post('/create_process', function(request, response) {
+  // console.log(request.list);  //불러오지 못함 <undefined> (post라서)  13line 참조
   var post = request.body;
   var title = post.title;
   var description = post.description;
@@ -94,28 +95,26 @@ app.post('/create_process', function(request, response) {
 });
 
 app.get('/update/:pageId', function(request, response) {
-  fs.readdir('./data', function(error, filelist){
-    var filteredId = path.parse(request.params.pageId).base;
-    fs.readFile(`data/${filteredId}`, 'utf8', function(err, description){
-      var title = request.params.pageId;
-      var list = template.list(filelist);
-      var html = template.HTML(title, list,
-        `
-        <form action="/update_process" method="post">
-          <input type="hidden" name="id" value="${title}">
-          <p><input type="text" name="title" placeholder="title" value="${title}"></p>
-          <p>
-            <textarea name="description" placeholder="description">${description}</textarea>
-          </p>
-          <p>
-            <input type="submit">
-          </p>
-        </form>
-        `,
-        `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`
-      );
-      response.send(html);
-    });
+  var filteredId = path.parse(request.params.pageId).base;
+  fs.readFile(`data/${filteredId}`, 'utf8', function(err, description){
+    var title = request.params.pageId;
+    var list = template.list(filelist);
+    var html = template.HTML(title, list,
+      `
+      <form action="/update_process" method="post">
+        <input type="hidden" name="id" value="${title}">
+        <p><input type="text" name="title" placeholder="title" value="${title}"></p>
+        <p>
+          <textarea name="description" placeholder="description">${description}</textarea>
+        </p>
+        <p>
+          <input type="submit">
+        </p>
+      </form>
+      `,
+      `<a href="/create">create</a> <a href="/update?id=${title}">update</a>`
+    );
+    response.send(html);
   });
 });
 
