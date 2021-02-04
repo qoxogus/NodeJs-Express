@@ -169,7 +169,7 @@ app.post('/delete_process', function(request, response){
 });
 
 // app.listen(3000, () => console.log('Example app listening on port 3000!'))
-app.listen(3000, function() { //3000포트
+app.listen(3000, function() { //3000포트에서
   console.log('Example app listening on port 3000!')
 });
 
