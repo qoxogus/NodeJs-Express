@@ -8,6 +8,7 @@ var path = require('path');
 var sanitizeHtml = require('sanitize-html');
 var compression = require('compression');
 
+app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(compression()); //압축
 app.get('*', function(request, response, next){ //next에 middleware가 담겨있다고 생각    불필요한 불러오기를 방지하기 위해 get을 사용(post방식 등에서 방지)   '*' = 들어오는 모든 요청    (들어오는 모든요청이 아닌 get방식으로 들어오는 요청에 대해서만 파일리스트를 가져오는 코드)
@@ -24,7 +25,10 @@ app.get('/', function(request, response) {
   var description = 'Hello, Node.js';
   var list = template.list(request.list);
   var html = template.HTML(title, list,
-    `<h2>${title}</h2>${description}`, //template.HTML - control
+    `
+    <h2>${title}</h2>${description}
+    <img src="/images/hello.jpg" style="width:300px; display:block; margin-top:10px;">
+    `, //template.HTML - control
     `<a href="/create">create</a>` //template.HTML - body
     );
   response.send(html);
