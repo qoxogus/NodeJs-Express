@@ -1,10 +1,12 @@
 var express = require('express')
 var app = express()
 var fs = require('fs');
-var template = require('./lib/template.js');
 var bodyParser = require('body-parser');
 var compression = require('compression');
-var topicRouter = require('./routes/topic')
+
+var indexRouter = require('./routes/index');
+var topicRouter = require('./routes/topic');
+
 
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -16,23 +18,10 @@ app.get('*', function(request, response, next){ //next에 middleware가 담겨�
   });
 });
 
-//route, routing
-// app.get('/', (req, res) => res.send('Hello World!'))
-app.get('/', function(request, response) {
-  var title = 'Welcome';
-  var description = 'Hello, Node.js';
-  var list = template.list(request.list);
-  var html = template.HTML(title, list,
-    `
-    <h2>${title}</h2>${description}
-    <img src="/images/hello.jpg" style="width:300px; display:block; margin-top:10px;">
-    `, //template.HTML - control
-    `<a href="/topic/create">create</a>` //template.HTML - body
-    );
-  response.send(html);
-});
 
+app.use('/', indexRouter);
 app.use('/topic', topicRouter); // /topic 이므로 topic.js에서는 /topic을 빼야한다
+
 
 //미들웨어는 순차적으로 실행이 된다 그러므로 404에러처리 미들웨어는 가장 마지막에 위치한다.
 app.use(function(req, res, next) {
@@ -48,40 +37,3 @@ app.use(function (err, req, res, next) {
 app.listen(3000, function() { //3000포트에서
   console.log('Example app listening on port 3000!')
 });
-
-/*
-var http = require('http');
-var fs = require('fs');
-var url = require('url');
-var qs = require('querystring');
-var template = require('./lib/template.js');
-var path = require('path');
-var sanitizeHtml = require('sanitize-html');
-
-var app = http.createServer(function(request,response){
-    var _url = request.url;
-    var queryData = url.parse(_url, true).query;
-    var pathname = url.parse(_url, true).pathname;
-    if(pathname === '/'){
-      if(queryData.id === undefined){
-        
-      } else {
-        
-      }
-    } else if(pathname === '/create'){
-      
-    } else if(pathname === '/create_process'){
-      
-    } else if(pathname === '/update'){
-      
-    } else if(pathname === '/update_process'){
-      
-    } else if(pathname === '/delete_process'){
-      
-    } else {
-      response.writeHead(404);
-      response.end('Not found');
-    }
-});
-app.listen(3000);
-*/
